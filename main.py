@@ -19,7 +19,7 @@ def prepare_song_clip(track_info):
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
-        'outtmpl': 'full_song.mp3',  # Save the file as full_song.mp3
+        'outtmpl': 'full_song',  # Save the file as full_song.mp3
         'default_search': 'ytsearch1:', # Search YouTube and get the first result
         'quiet': True,
     }

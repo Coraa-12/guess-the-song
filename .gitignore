@@ -7,6 +7,9 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+.python-version
+full_song.mp3
+game_clip.mp3
 sample.mp3
 .env
 .Python
