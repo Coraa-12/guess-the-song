@@ -31,7 +31,7 @@ def prepare_song_clip(track_info):
     """Downloads a song, cuts a 5-second clip, and stores its info."""
     global current_song_info
     current_song_info = track_info
-    
+
     search_query = f"{track_info['name']} by {track_info['artist']}"
     # print(f"Preparing song: {current_song_info['name']}") # Keep this commented
 
@@ -46,7 +46,7 @@ def prepare_song_clip(track_info):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([search_query])
         song = AudioSegment.from_mp3("full_song.mp3")
-        clip = song[30000:35000] 
+        clip = song[30000:35000]
         clip.export("game_clip.mp3", format="mp3")
         # print("Clip created successfully.") # Keep this commented
     except Exception as e:
@@ -59,7 +59,7 @@ def fetch_playlist_tracks(playlist_url):
         auth_manager = SpotifyClientCredentials()
         sp = spotipy.Spotify(auth_manager=auth_manager)
         results = sp.playlist_tracks(playlist_url)
-        
+
         for item in results['items']:
             track = item['track']
             if track['name'].isascii():
@@ -73,16 +73,20 @@ def fetch_playlist_tracks(playlist_url):
 def play_audio(filename):
     """Loads and plays the specified audio file."""
     try:
-        pygame.mixer.music.load(filename) 
+        pygame.mixer.music.load(filename)
         pygame.mixer.music.play()
     except pygame.error as e:
         print(f"Error playing sound: {e}")
+
+def stop_audio():
+    """Stops the currently playing music."""
+    pygame.mixer.music.stop()
 
 def check_guess():
     """Checks the user's guess and plays the full song on failure."""
     user_guess = guess_entry.get()
     correct_answer = current_song_info.get('name', '')
-    
+
     if user_guess.lower() == correct_answer.lower():
         feedback_label.config(text="Correct! 🎉", fg="green")
     else:
@@ -101,10 +105,18 @@ root.title("Guess The Song")
 root.geometry("500x300")
 
 # --- Widgets ---
-# We use a lambda to pass the filename argument to our play_audio function
-play_button = tk.Button(root, text="Play Clip", command=lambda: play_audio("game_clip.mp3"))
-play_button.pack(pady=10)
+# Create a frame to hold the audio control buttons
+audio_frame = tk.Frame(root)
+audio_frame.pack(pady=5)
 
+# Add the Play and Stop buttons to the frame
+play_button = tk.Button(audio_frame, text="▶️ Play Clip", command=lambda: play_audio("game_clip.mp3"))
+play_button.pack(side=tk.LEFT, padx=5)
+
+stop_button = tk.Button(audio_frame, text="⏹️ Stop", command=stop_audio)
+stop_button.pack(side=tk.LEFT, padx=5)
+
+# Add the rest of the widgets
 guess_entry = tk.Entry(root, width=50)
 guess_entry.pack(pady=5)
 
