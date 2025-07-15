@@ -2,31 +2,36 @@ import tkinter as tk
 import pygame
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
-import os # To read environment variables
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def fetch_playlist_tracks(playlist_url):
-    """Fetches track names and artists from a Spotify playlist."""
+    """
+    Fetches track names from a Spotify playlist and filters for English titles.
+    Returns a list of dictionaries, where each dictionary represents a track.
+    """
+    english_tracks = []
     try:
-        # Authenticate with Spotify using your credentials
         auth_manager = SpotifyClientCredentials()
         sp = spotipy.Spotify(auth_manager=auth_manager)
-
         results = sp.playlist_tracks(playlist_url)
-        tracks = results['items']
         
-        print("--- Found Tracks ---")
-        for item in tracks:
-            track_name = item['track']['name']
-            artist_name = item['track']['artists'][0]['name']
-            print(f"- {track_name} by {artist_name}")
-        print("--------------------")
+        for item in results['items']:
+            track = item['track']
+            # Check if the track name contains only ASCII characters
+            if track['name'].isascii():
+                track_info = {
+                    'name': track['name'],
+                    'artist': track['artists'][0]['name']
+                }
+                english_tracks.append(track_info)
+        return english_tracks
 
     except Exception as e:
         print(f"Error fetching from Spotify: {e}")
-        print("Are your SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET environment variables set correctly?")
+        return []
 
 
 def play_clip():
@@ -41,12 +46,16 @@ def play_clip():
 # --- Setup ---
 pygame.mixer.init()
 
-# <<<<<<< NEW CODE HERE <<<<<<<
-# Find any public Spotify playlist and paste its URL here
-# For example: "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
 TARGET_PLAYLIST = "https://open.spotify.com/playlist/4bFczrl6d5rwABtAsqhfwB" 
-fetch_playlist_tracks(TARGET_PLAYLIST)
-# >>>>>>>>>>>> END NEW CODE >>>>>>>>>>>>
+# Fetch the filtered list of tracks
+game_tracks = fetch_playlist_tracks(TARGET_PLAYLIST)
+
+# Print the filtered results to confirm it worked
+print("--- Filtered English Tracks ---")
+for track in game_tracks:
+    print(f"- {track['name']} by {track['artist']}")
+print("-----------------------------")
+
 
 # --- GUI ---
 root = tk.Tk()
