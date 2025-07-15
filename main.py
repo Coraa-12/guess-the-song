@@ -59,11 +59,12 @@ def fetch_playlist_tracks(playlist_url):
 def play_clip():
     """Loads and plays the sample audio file."""
     try:
-        pygame.mixer.music.load("sample.mp3")
+        pygame.mixer.music.load("game_clip.mp3")
         pygame.mixer.music.play()
-        print("Playing sample.mp3")
+        print("Playing game_clip.mp3")
     except pygame.error as e:
         print(f"Error playing sound: {e}")
+        print("Has the game clip been created yet?")
 
 # --- Setup ---
 pygame.mixer.init()
