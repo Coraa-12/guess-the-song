@@ -70,17 +70,16 @@ def fetch_playlist_tracks(playlist_url):
         print(f"Error fetching from Spotify: {e}")
         return []
 
-def play_clip():
-    """Loads and plays the generated game clip."""
+def play_audio(filename):
+    """Loads and plays the specified audio file."""
     try:
-        pygame.mixer.music.load("game_clip.mp3") 
+        pygame.mixer.music.load(filename) 
         pygame.mixer.music.play()
-        # print("Playing game_clip.mp3") # You can comment this out too
     except pygame.error as e:
         print(f"Error playing sound: {e}")
 
 def check_guess():
-    """Checks the user's guess against the correct answer."""
+    """Checks the user's guess and plays the full song on failure."""
     user_guess = guess_entry.get()
     correct_answer = current_song_info.get('name', '')
     
@@ -88,10 +87,12 @@ def check_guess():
         feedback_label.config(text="Correct! 🎉", fg="green")
     else:
         feedback_label.config(text=f"Nope! It was: {correct_answer}", fg="red")
+        # Play the full song to reveal the answer
+        play_audio("full_song.mp3")
 
 # --- Setup ---
 pygame.mixer.init()
-TARGET_PLAYLIST = "https://open.spotify.com/playlist/4bFczrl6d5rwABtAsqhfwB?si=5wY9ch0DS3KFpqpUK0mc1Q"
+TARGET_PLAYLIST = "https://open.spotify.com/playlist/4bFczrl6d5rwABtAsqhfwB?si=oW7VyhBXSxqXDOfvovOrlg"
 game_tracks = fetch_playlist_tracks(TARGET_PLAYLIST)
 
 # --- GUI ---
@@ -100,7 +101,8 @@ root.title("Guess The Song")
 root.geometry("500x300")
 
 # --- Widgets ---
-play_button = tk.Button(root, text="Play Clip", command=play_clip)
+# We use a lambda to pass the filename argument to our play_audio function
+play_button = tk.Button(root, text="Play Clip", command=lambda: play_audio("game_clip.mp3"))
 play_button.pack(pady=10)
 
 guess_entry = tk.Entry(root, width=50)
@@ -109,7 +111,6 @@ guess_entry.pack(pady=5)
 guess_button = tk.Button(root, text="Guess", command=check_guess)
 guess_button.pack(pady=5)
 
-# Add a "Next Song" button
 next_song_button = tk.Button(root, text="Next Song", command=start_new_round)
 next_song_button.pack(pady=10)
 
