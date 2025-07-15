@@ -11,30 +11,29 @@ from pydub import AudioSegment
 load_dotenv()
 
 def prepare_song_clip(track_info):
-    """Downloads a song and cuts a 5-second clip."""
+    """Downloads a song, cuts a 5-second clip, and stores its info."""
+    global current_song_info
+    current_song_info = track_info
+    
     search_query = f"{track_info['name']} by {track_info['artist']}"
-    print(f"Preparing song: {search_query}")
+    # print(f"Preparing song: {current_song_info['name']}") # <--- COMMENT THIS OUT
 
-    # 1. Download the audio from YouTube
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
-        'outtmpl': 'full_song',  # Save the file as full_song.mp3
-        'default_search': 'ytsearch1:', # Search YouTube and get the first result
+        'outtmpl': 'full_song',
+        'default_search': 'ytsearch1:',
         'quiet': True,
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([search_query])
-        print("Download complete.")
+        # print("Download complete.") # <--- COMMENT THIS OUT
 
-        # 2. Cut a 5-second clip using pydub
         song = AudioSegment.from_mp3("full_song.mp3")
-        # Cut from 30 seconds to 35 seconds (30000ms to 35000ms)
         clip = song[30000:35000] 
         clip.export("game_clip.mp3", format="mp3")
-        print("Clip created: game_clip.mp3")
-
+        # print("Clip created successfully.") # <--- COMMENT THIS OUT
     except Exception as e:
         print(f"An error occurred during song preparation: {e}")
 
