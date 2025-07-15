@@ -10,13 +10,30 @@ from pydub import AudioSegment
 
 load_dotenv()
 
+# --- Global Game State ---
+current_song_info = {}
+
+# --- Core Functions ---
+def start_new_round():
+    """Selects a new random song, prepares it, and resets the UI."""
+    if game_tracks:
+        # Clear the previous guess and feedback
+        guess_entry.delete(0, tk.END)
+        feedback_label.config(text="")
+
+        # Prepare a new song
+        random_song = random.choice(game_tracks)
+        prepare_song_clip(random_song)
+    else:
+        feedback_label.config(text="Playlist is empty or failed to load.", fg="red")
+
 def prepare_song_clip(track_info):
     """Downloads a song, cuts a 5-second clip, and stores its info."""
     global current_song_info
     current_song_info = track_info
     
     search_query = f"{track_info['name']} by {track_info['artist']}"
-    # print(f"Preparing song: {current_song_info['name']}") # <--- COMMENT THIS OUT
+    # print(f"Preparing song: {current_song_info['name']}") # Keep this commented
 
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -28,17 +45,15 @@ def prepare_song_clip(track_info):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([search_query])
-        # print("Download complete.") # <--- COMMENT THIS OUT
-
         song = AudioSegment.from_mp3("full_song.mp3")
         clip = song[30000:35000] 
         clip.export("game_clip.mp3", format="mp3")
-        # print("Clip created successfully.") # <--- COMMENT THIS OUT
+        # print("Clip created successfully.") # Keep this commented
     except Exception as e:
         print(f"An error occurred during song preparation: {e}")
 
 def fetch_playlist_tracks(playlist_url):
-    # ... (this function remains the same)
+    # This function remains the same
     english_tracks = []
     try:
         auth_manager = SpotifyClientCredentials()
@@ -56,34 +71,53 @@ def fetch_playlist_tracks(playlist_url):
         return []
 
 def play_clip():
-    """Loads and plays the sample audio file."""
+    """Loads and plays the generated game clip."""
     try:
-        pygame.mixer.music.load("game_clip.mp3")
+        pygame.mixer.music.load("game_clip.mp3") 
         pygame.mixer.music.play()
-        print("Playing game_clip.mp3")
+        # print("Playing game_clip.mp3") # You can comment this out too
     except pygame.error as e:
         print(f"Error playing sound: {e}")
-        print("Has the game clip been created yet?")
+
+def check_guess():
+    """Checks the user's guess against the correct answer."""
+    user_guess = guess_entry.get()
+    correct_answer = current_song_info.get('name', '')
+    
+    if user_guess.lower() == correct_answer.lower():
+        feedback_label.config(text="Correct! 🎉", fg="green")
+    else:
+        feedback_label.config(text=f"Nope! It was: {correct_answer}", fg="red")
 
 # --- Setup ---
 pygame.mixer.init()
-
 TARGET_PLAYLIST = "https://open.spotify.com/playlist/4bFczrl6d5rwABtAsqhfwB?si=5wY9ch0DS3KFpqpUK0mc1Q"
 game_tracks = fetch_playlist_tracks(TARGET_PLAYLIST)
-
-if game_tracks:
-    # Pick a random song from our list and prepare it
-    random_song = random.choice(game_tracks)
-    prepare_song_clip(random_song)
-else:
-    print("No tracks found to prepare. Check your playlist URL.")
 
 # --- GUI ---
 root = tk.Tk()
 root.title("Guess The Song")
 root.geometry("500x300")
 
+# --- Widgets ---
 play_button = tk.Button(root, text="Play Clip", command=play_clip)
 play_button.pack(pady=10)
 
+guess_entry = tk.Entry(root, width=50)
+guess_entry.pack(pady=5)
+
+guess_button = tk.Button(root, text="Guess", command=check_guess)
+guess_button.pack(pady=5)
+
+# Add a "Next Song" button
+next_song_button = tk.Button(root, text="Next Song", command=start_new_round)
+next_song_button.pack(pady=10)
+
+feedback_label = tk.Label(root, text="", font=("Helvetica", 12))
+feedback_label.pack(pady=10)
+
+# --- Start First Round ---
+start_new_round()
+
+# --- Main Loop ---
 root.mainloop()
